@@ -49,7 +49,7 @@ public class CubicSplineInterpolator implements Interpolatable {
                 double alpha = m[i] / slopes[i];
                 double beta = m[i + 1] / slopes[i];
                 double h = Math.hypot(alpha, beta);
-                if (h > 9f) {
+                if (h > 3f) {
                     double t = 3f / h;
                     m[i] = t * alpha * slopes[i];
                     m[i + 1] = t * beta * slopes[i];
@@ -82,12 +82,25 @@ public class CubicSplineInterpolator implements Interpolatable {
 
         //Cubic Hermite spline interpolation.
         //now we know that the x value is between i and i+1
-        double xupper = distances.get(i + 1);
-        double xlower = distances.get(i);
-        double h = xupper - xlower;
-        double t = (x - xlower) / h;
-        return (heights.get(i) * (3 * t) + h * m[i] * t) * Math.pow(1 - t, 2)
-                + (heights.get(i + 1) * t + h * m[i + 1] * (t - 1)) * Math.pow(t, 2);
+        double X_upper = distances.get(i + 1);
+        double X_lower = distances.get(i);
+        double h = X_upper - X_lower;
+        double t = (x - X_lower) / h;
+
+
+        //https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Representations
+        double Y_lower = heights.get(i);
+        double Y_upper = heights.get(i + 1);
+        double M_lower = m[i];
+        double M_upper = m[i + 1];
+
+        //h_ii are the basis functions for the cubic Hermite spline.
+        double h00 = (1 + 2 * t) * Math.pow(1 - t, 2);
+        double h10 = t * Math.pow(1 - t, 2);
+        double h01 = (3 - 2 * t) * Math.pow(t, 2);
+        double h11 = (t - 1) * Math.pow(t, 2);
+
+        return Y_lower * h00 + h * M_lower * h10 + Y_upper * h01 + h * M_upper * h11;
     }
 
     @Override
